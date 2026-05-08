@@ -89,11 +89,23 @@ export async function getLocalResponse(persona, userMessage, chatHistory, catego
   return response
 }
 
+// Map our language codes to natural-language names the LLM will recognize.
+// `translateText` accepts either a code or an already-spelled-out name.
+const LANG_NAME = {
+  en: 'English',
+  zh: 'Chinese',
+  fr: 'French',
+  es: 'Spanish',
+  ja: 'Japanese',
+  ko: 'Korean',
+}
+const langName = (codeOrName) => LANG_NAME[codeOrName] || codeOrName
+
 export async function translateText(text, fromLang, toLang) {
   const messages = [
     {
       role: 'system',
-      content: `You are a translator. Translate the following ${fromLang} text to ${toLang}. Only output the translation, nothing else. Keep the tone casual and natural.`,
+      content: `You are a translator. Translate the following ${langName(fromLang)} text to ${langName(toLang)}. Only output the translation, nothing else. Keep the tone casual and natural.`,
     },
     { role: 'user', content: text },
   ]
@@ -143,6 +155,122 @@ function nationalityZh(nationality) {
   return NATIONALITY_ZH[nationality] || `${nationality}人`
 }
 
+// Per-language section headers for the guide. The Markdown structure is the
+// same across languages — only the headings/footer/hashtags localize.
+const GUIDE_TEMPLATE = {
+  en: {
+    locationLabel: 'Location: Shanghai',
+    audienceLabel: (nat) => `For: travelers from ${nat}`,
+    sections: [
+      ['🍜 Food & Restaurants', 'List specific recommendations from the chat with brief descriptions'],
+      ['🗺️ Getting Around', 'Transportation tips mentioned in the chat'],
+      ['⭐ Must-Visit Spots', 'Attractions and hidden gems recommended'],
+      ['💡 Local Tips', 'Practical advice and insider tips from the locals'],
+      ['📋 Suggested Itinerary', 'A brief suggested schedule based on all recommendations'],
+    ],
+    footer: '✨ Guide generated from real conversations with Shanghai locals',
+    hashtags: (nat) => `#Shanghai #TravelGuide #${nat.replace(/\s+/g, '')}InShanghai #LocalTips #ChinaTravel`,
+    hookExamples: (nat) => [
+      `✨ Must-Read Shanghai Guide for Travelers from ${nat} — Locals Spilled Everything!`,
+      `🔥 Visiting Shanghai from ${nat}? DON'T miss these locals-only spots!`,
+      `💯 Tested by a traveler from ${nat}: the ULTIMATE Shanghai cheat sheet`,
+    ],
+  },
+  zh: {
+    locationLabel: '位置：上海',
+    audienceLabel: (nat) => `适合：${nationalityZh(nat)}游客`,
+    sections: [
+      ['🍜 美食推荐', '列出聊天中推荐的具体餐厅和美食'],
+      ['🗺️ 交通指南', '聊天中提到的交通建议'],
+      ['⭐ 必去景点', '推荐的景点和小众打卡地'],
+      ['💡 本地人贴士', '来自本地人的实用建议和内幕消息'],
+      ['📋 行程建议', '基于所有推荐的简要行程安排'],
+    ],
+    footer: '✨ 攻略由与上海本地人的真实对话生成',
+    hashtags: (nat) => `#上海 #旅行攻略 #${nationalityZh(nat)}在上海 #本地推荐 #中国旅行 #citywalk`,
+    hookExamples: (nat) => {
+      const n = nationalityZh(nat)
+      return [
+        `✨${n}必看｜上海本地人private list 全公开！`,
+        `🔥${n}来上海别再走弯路！这份攻略一定要收藏`,
+        `💯亲测有效｜一个${n}的上海city walk终极清单`,
+      ]
+    },
+  },
+  fr: {
+    locationLabel: 'Lieu : Shanghai',
+    audienceLabel: (nat) => `Pour : voyageurs de ${nat}`,
+    sections: [
+      ['🍜 Cuisine & Restaurants', 'Listez les recommandations précises du chat avec une brève description'],
+      ['🗺️ Se déplacer', 'Conseils de transport mentionnés dans le chat'],
+      ['⭐ À ne pas manquer', 'Attractions et lieux confidentiels recommandés'],
+      ['💡 Conseils des locaux', 'Astuces pratiques et infos insider des locaux'],
+      ['📋 Itinéraire suggéré', 'Un programme bref basé sur toutes les recommandations'],
+    ],
+    footer: '✨ Guide généré à partir de vraies conversations avec des locaux de Shanghai',
+    hashtags: (nat) => `#Shanghai #GuideVoyage #${nat.replace(/\s+/g, '')}AShanghai #ConseilsLocaux #VoyageChine`,
+    hookExamples: (nat) => [
+      `✨ Guide de Shanghai à ne pas manquer pour les voyageurs de ${nat} — Les locaux ont tout révélé !`,
+      `🔥 Vous venez de ${nat} à Shanghai ? Ne manquez PAS ces adresses confidentielles !`,
+      `💯 Testé par un voyageur de ${nat} : LE guide ultime de Shanghai`,
+    ],
+  },
+  es: {
+    locationLabel: 'Ubicación: Shanghái',
+    audienceLabel: (nat) => `Para: viajeros de ${nat}`,
+    sections: [
+      ['🍜 Comida & Restaurantes', 'Lista recomendaciones específicas del chat con descripción breve'],
+      ['🗺️ Cómo moverse', 'Consejos de transporte mencionados en el chat'],
+      ['⭐ Imprescindibles', 'Atracciones y rincones secretos recomendados'],
+      ['💡 Tips de locales', 'Consejos prácticos e información de primera mano'],
+      ['📋 Itinerario sugerido', 'Un breve plan basado en todas las recomendaciones'],
+    ],
+    footer: '✨ Guía generada a partir de conversaciones reales con locales de Shanghái',
+    hashtags: (nat) => `#Shanghái #GuíaDeViaje #${nat.replace(/\s+/g, '')}EnShanghái #ConsejosLocales #ViajeChina`,
+    hookExamples: (nat) => [
+      `✨ Guía imprescindible de Shanghái para viajeros de ${nat} — ¡Los locales lo cuentan todo!`,
+      `🔥 ¿Vienes a Shanghái desde ${nat}? ¡NO te pierdas estos rincones de locales!`,
+      `💯 Probado por un viajero de ${nat}: la guía DEFINITIVA de Shanghái`,
+    ],
+  },
+  ja: {
+    locationLabel: '場所：上海',
+    audienceLabel: (nat) => `対象：${nat}からの旅行者`,
+    sections: [
+      ['🍜 グルメ & レストラン', 'チャットで挙がった具体的なおすすめを簡単な説明とともに'],
+      ['🗺️ 移動手段', 'チャットで触れられた交通のヒント'],
+      ['⭐ 必見スポット', 'おすすめの観光地と隠れた名所'],
+      ['💡 現地人のコツ', '現地の人ならではの実用的なアドバイス'],
+      ['📋 おすすめプラン', 'すべてのおすすめを踏まえた簡単なスケジュール'],
+    ],
+    footer: '✨ 上海の現地の人とのリアルな会話から生成されたガイド',
+    hashtags: (nat) => `#上海 #旅行ガイド #${nat.replace(/\s+/g, '')}の上海旅 #現地のコツ #中国旅行`,
+    hookExamples: (nat) => [
+      `✨${nat}の旅人必見｜上海現地人だけが知る私的リスト大公開！`,
+      `🔥${nat}から上海に行くなら、この現地人スポットは絶対外せない！`,
+      `💯${nat}の旅人がガチで検証｜上海の決定版チートシート`,
+    ],
+  },
+  ko: {
+    locationLabel: '장소: 상하이',
+    audienceLabel: (nat) => `대상: ${nat}에서 온 여행자`,
+    sections: [
+      ['🍜 맛집 & 음료', '채팅에서 추천된 구체적인 곳을 간단한 설명과 함께 정리'],
+      ['🗺️ 이동 정보', '채팅에서 언급된 교통 팁'],
+      ['⭐ 필수 방문지', '추천된 관광지와 숨은 명소'],
+      ['💡 현지인 꿀팁', '현지인만 아는 실용적인 조언'],
+      ['📋 추천 일정', '모든 추천을 토대로 한 간단 일정'],
+    ],
+    footer: '✨ 상하이 현지인과의 실제 대화에서 생성된 가이드',
+    hashtags: (nat) => `#상하이 #여행가이드 #${nat.replace(/\s+/g, '')}의상하이 #현지인꿀팁 #중국여행`,
+    hookExamples: (nat) => [
+      `✨${nat} 여행자 필독｜상하이 현지인만 아는 시크릿 리스트 대공개!`,
+      `🔥${nat}에서 상하이 가시나요? 이 현지인 스폿은 절대 놓치지 마세요!`,
+      `💯${nat} 여행자 인증｜상하이 끝판왕 가이드`,
+    ],
+  },
+}
+
 export async function generateGuide(
   chatMessages,
   categoryOrCategories,
@@ -162,83 +290,44 @@ export async function generateGuide(
     })
     .join('\n')
 
-  const natZh = nationalityZh(nationality)
+  // Resolve the localized template (fall back to English for unknown codes).
+  const tpl = GUIDE_TEMPLATE[lang] || GUIDE_TEMPLATE.en
+  const sectionsBlock = tpl.sections
+    .map(([heading, hint]) => `## ${heading}\n[${hint}]`)
+    .join('\n\n')
+  const hooks = tpl.hookExamples(nationality).map((h) => `  - "${h}"`).join('\n')
+  // The audience token is what the model is told to weave into the title.
+  const audienceToken = lang === 'zh' ? nationalityZh(nationality) : nationality
 
-  const systemPrompt = lang === 'en'
-    ? `You are a Xiaohongshu/Little Red Book viral content creator writing a Shanghai travel guide for a tourist from ${nationality}, based on a real group-chat conversation with Shanghai locals.
+  // The system prompt is always written in English (clearer to the model),
+  // but it instructs the model to generate everything in `targetLanguage`.
+  const systemPrompt = `You are a Xiaohongshu/Little Red Book viral content creator writing a Shanghai travel guide for a tourist from ${nationality}, based on a real group-chat conversation with Shanghai locals.
 
-The TITLE must follow Xiaohongshu's hook-y, slightly hype, marketing style — punchy, with emojis, mentioning the tourist's home country so it feels personal and clickable. Examples of the vibe:
-  - "✨ Must-Read Shanghai Guide for Travelers from ${nationality} — Locals Spilled Everything!"
-  - "🔥 Visiting Shanghai from ${nationality}? DON'T miss these locals-only spots!"
-  - "💯 Tested by a tourist from ${nationality}: the ULTIMATE Shanghai cheat sheet"
+CRITICAL: Write the ENTIRE guide — title, headers, body, hashtags, footer — in **${langName(lang)}**. Do not output any other language.
+
+The TITLE must follow Xiaohongshu's hook-y, slightly hype, marketing style — punchy, with emojis, naturally weaving in the tourist's home country ("${audienceToken}") so it feels personal and clickable. Examples of the vibe (translate or adapt to ${langName(lang)}):
+${hooks}
 Make the title feel like a Xiaohongshu post — not a generic travel article.
 
-Format your response EXACTLY as follows (use these exact headers):
+Format your response EXACTLY as follows (use these EXACT localized headers, do NOT translate them differently):
 
-# [Xiaohongshu-style hook title that includes "${nationality}"]
+# [Xiaohongshu-style hook title in ${langName(lang)} that includes "${audienceToken}"]
 
-📍 Location: Shanghai  |  👤 For: travelers from ${nationality}
+📍 ${tpl.locationLabel}  |  👤 ${tpl.audienceLabel(nationality)}
 
-## 🍜 Food & Restaurants
-[List specific recommendations from the chat with brief descriptions]
-
-## 🗺️ Getting Around
-[Transportation tips mentioned in the chat]
-
-## ⭐ Must-Visit Spots
-[Attractions and hidden gems recommended]
-
-## 💡 Local Tips
-[Practical advice and insider tips from the locals]
-
-## 📋 Suggested Itinerary
-[A brief suggested schedule based on all recommendations]
+${sectionsBlock}
 
 ---
-✨ Guide generated from real conversations with Shanghai locals
-🏷️ #Shanghai #TravelGuide #${nationality}InShanghai #LocalTips #ChinaTravel #Citywalk
+${tpl.footer}
+🏷️ ${tpl.hashtags(nationality)}
 
-Keep the body informative and engaging. Use emojis naturally. 2-4 bullet points per section with specific, actionable info from the chat. Sprinkle in light marketing-style adjectives ("hidden gem", "must-try", "insider", "don't miss") but stay grounded in the chat content.`
-    : `你是一个小红书爆款攻略博主，正在为一位${natZh}游客写一份上海旅行攻略，内容基于他和上海本地人的群聊对话。
-
-【标题要求】必须是小红书爆款风格——带emoji、有钩子感、营销味浓、明确写出游客国籍让人感觉"就是写给我的"。例如：
-  - "✨${natZh}必看｜上海本地人private list 全公开！"
-  - "🔥${natZh}来上海别再走弯路！这份攻略一定要收藏"
-  - "💯亲测有效｜一个${natZh}的上海city walk终极清单"
-标题要像小红书笔记的标题，不要像普通旅游博客。
-
-格式要求（严格使用以下标题）：
-
-# [小红书爆款风格标题，必须包含"${natZh}"]
-
-📍 位置：上海  |  👤 适合：${natZh}游客
-
-## 🍜 美食推荐
-[列出聊天中推荐的具体餐厅和美食]
-
-## 🗺️ 交通指南
-[聊天中提到的交通建议]
-
-## ⭐ 必去景点
-[推荐的景点和小众打卡地]
-
-## 💡 本地人贴士
-[来自本地人的实用建议和内幕消息]
-
-## 📋 行程建议
-[基于所有推荐的简要行程安排]
-
----
-✨ 攻略由与上海本地人的真实对话生成
-🏷️ #上海 #旅行攻略 #${natZh}在上海 #本地推荐 #中国旅行 #citywalk
-
-正文要信息丰富、有趣、排版整洁，每个部分2-4个要点，结合聊天中的具体信息。可以适当用"私藏"、"必去"、"绝绝子"、"避雷"、"姐妹们"这种小红书风格的词，但内容要真实贴合聊天。`
+Keep the body informative and engaging. Use emojis naturally. 2-4 bullet points per section with specific, actionable info from the chat. Sprinkle in light marketing-style adjectives (equivalent of "hidden gem", "must-try", "insider", "don't miss" in ${langName(lang)}) but stay grounded in the chat content.`
 
   const messages = [
     { role: 'system', content: systemPrompt },
     {
       role: 'user',
-      content: `Here is the group chat conversation:\n\n${chatContent}\n\nCategory focus: ${categoryLabel}\nTourist nationality: ${nationality}`,
+      content: `Here is the group chat conversation:\n\n${chatContent}\n\nCategory focus: ${categoryLabel}\nTourist nationality: ${nationality}\nTarget output language: ${langName(lang)}`,
     },
   ]
 

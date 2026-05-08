@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useLang } from '../context/LanguageContext'
+import { useLang, SUPPORTED_LANGUAGES } from '../context/LanguageContext'
 import {
   Search,
   MessageCircle,
@@ -14,6 +14,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import FindLocalsSplash from '../components/FindLocalsSplash'
+import LanguagePicker from '../components/LanguagePicker'
 
 // One-shot guard for the Find Locals onboarding splash. Lives at module scope
 // so it survives in-app navigation (Home → FindHelp → back to Home doesn't
@@ -21,14 +22,17 @@ import FindLocalsSplash from '../components/FindLocalsSplash'
 // refresh or dev-server restart — which is exactly the demo behavior we want.
 let splashSeenThisSession = false
 
-function LangButton() {
-  const { toggleLang, t } = useLang()
+function LangButton({ onClick }) {
+  const { lang } = useLang()
+  const current = SUPPORTED_LANGUAGES.find((l) => l.code === lang) || SUPPORTED_LANGUAGES[0]
   return (
     <button
-      onClick={toggleLang}
-      className="px-2.5 py-1 text-xs font-medium rounded-full border border-xhs-border text-xhs-text-secondary hover:bg-xhs-bg transition-colors shrink-0"
+      onClick={onClick}
+      className="flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-full border border-xhs-border text-xhs-text-secondary hover:text-xhs-red hover:border-xhs-red transition-colors shrink-0"
+      aria-label={current.name}
     >
-      {t('lang.switchTo')}
+      <span className="text-sm leading-none">{current.flag}</span>
+      <ChevronDown size={12} strokeWidth={2.5} />
     </button>
   )
 }
@@ -102,24 +106,25 @@ const MOCK_NOTES = [
   },
 ]
 
+// MOCK_NOTES only carry EN/ZH copy. For other UI languages we fall back to
+// the English title/author — pragmatic for a demo, real data would be
+// localized server-side.
 function NoteCard({ note, lang }) {
+  const title = lang === 'zh' ? note.titleZh : note.titleEn
+  const author = lang === 'zh' ? note.authorZh : note.authorEn
   return (
     <div className="rounded-xl overflow-hidden bg-white shadow-sm border border-xhs-border">
       <div className={`${note.height} bg-gradient-to-br ${note.gradient} flex items-center justify-center`}>
         <span className="text-5xl">{note.emoji}</span>
       </div>
       <div className="p-2.5">
-        <p className="text-xs font-medium text-xhs-text leading-snug line-clamp-2">
-          {lang === 'en' ? note.titleEn : note.titleZh}
-        </p>
+        <p className="text-xs font-medium text-xhs-text leading-snug line-clamp-2">{title}</p>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1">
             <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center">
               <span className="text-[8px]">👤</span>
             </div>
-            <span className="text-[10px] text-xhs-text-secondary">
-              {lang === 'en' ? note.authorEn : note.authorZh}
-            </span>
+            <span className="text-[10px] text-xhs-text-secondary">{author}</span>
           </div>
           <div className="flex items-center gap-0.5">
             <span className="text-[10px] text-xhs-text-secondary">❤️ {note.likes}</span>
@@ -138,6 +143,7 @@ export default function Home() {
   const { lang, t } = useLang()
   const [topTab, setTopTab] = useState('nearby')
   const [subTab, setSubTab] = useState('forYou')
+  const [langPickerOpen, setLangPickerOpen] = useState(false)
   // First-time taps on Find Locals show a full-screen onboarding splash
   // highlighting the product. Closing the splash (X or CTA) is what kicks
   // off navigation. Subsequent taps skip straight to /find-help.
@@ -190,7 +196,7 @@ export default function Home() {
         <button className="p-1.5 text-xhs-text">
           <Search size={20} />
         </button>
-        <LangButton />
+        <LangButton onClick={() => setLangPickerOpen(true)} />
       </div>
 
       {/* Sub-tabs (only on Explore — matches XHS) */}
@@ -224,15 +230,9 @@ export default function Home() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <MapPin size={14} />
-              <span className="text-xs font-medium truncate">
-                {lang === 'en' ? 'Shanghai · Nanjing West Road' : '上海 · 南京西路'}
-              </span>
+              <span className="text-xs font-medium truncate">{t('home.locationName')}</span>
             </div>
-            <p className="text-[11px] opacity-90">
-              {lang === 'en'
-                ? 'Need help exploring? Find a local now!'
-                : '需要帮助探索？立刻找一位本地人！'}
-            </p>
+            <p className="text-[11px] opacity-90">{t('home.nearbyHint')}</p>
           </div>
           <button
             onClick={handleFindLocals}
@@ -266,6 +266,8 @@ export default function Home() {
 
       {/* First-time onboarding splash for Find Locals */}
       {splashOpen && <FindLocalsSplash onClose={handleCloseSplash} />}
+
+      <LanguagePicker open={langPickerOpen} onClose={() => setLangPickerOpen(false)} />
     </>
   )
 }

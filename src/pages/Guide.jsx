@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
 import { generateGuide } from '../api/mimo'
@@ -9,11 +9,15 @@ export default function Guide() {
   const navigate = useNavigate()
   const location = useLocation()
   const { lang, t } = useLang()
-  const [guide, setGuide] = useState('')
-  const [guideZh, setGuideZh] = useState('')
+  // Cache guides by language so switching back to one we've already generated
+  // is instant. Initial fetch + every language switch lazily generates the
+  // missing entry.
+  const [guides, setGuides] = useState({})
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [shared, setShared] = useState(false)
+  // Local edits per language so editing in one doesn't blow away another.
+  const editsRef = useRef({})
 
   const messages = location.state?.messages || []
   const category = location.state?.category || 'food'
@@ -21,26 +25,34 @@ export default function Guide() {
   const nationality = location.state?.nationality || 'UK'
 
   useEffect(() => {
-    const fetchGuide = async () => {
-      try {
-        const [enGuide, zhGuide] = await Promise.all([
-          generateGuide(messages, categories, 'en', nationality),
-          generateGuide(messages, categories, 'zh', nationality),
-        ])
-        setGuide(enGuide)
-        setGuideZh(zhGuide)
-      } catch (err) {
-        console.error('Guide generation error:', err)
-        setGuide('Failed to generate guide. Please try again.')
-        setGuideZh('生成攻略失败，请重试。')
-      } finally {
-        setLoading(false)
-      }
+    // Skip if we already have a guide for this language (cache hit, e.g. user
+    // toggled away then back).
+    if (guides[lang] !== undefined) {
+      setLoading(false)
+      return
     }
-    fetchGuide()
-  }, [])
+    let cancelled = false
+    setLoading(true)
+    generateGuide(messages, categories, lang, nationality)
+      .then((text) => {
+        if (cancelled) return
+        setGuides((prev) => ({ ...prev, [lang]: text }))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('Guide generation error:', err)
+        setGuides((prev) => ({ ...prev, [lang]: t('guide.failed') }))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang])
 
-  const currentGuide = lang === 'en' ? guide : guideZh
+  const currentGuide = editsRef.current[lang] ?? guides[lang] ?? ''
 
   const handleShare = () => {
     setShared(true)
@@ -97,9 +109,7 @@ export default function Guide() {
         <div className="mx-4 mt-4 h-44 bg-gradient-to-br from-xhs-red via-pink-500 to-orange-400 rounded-2xl flex flex-col items-center justify-center text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10" />
           <span className="text-4xl mb-2 relative z-10">🗺️</span>
-          <h2 className="text-lg font-bold relative z-10">
-            {lang === 'en' ? 'Your Shanghai Guide' : '你的上海攻略'}
-          </h2>
+          <h2 className="text-lg font-bold relative z-10">{t('guide.coverTitle')}</h2>
           <p className="text-xs opacity-80 mt-1 relative z-10">{t('guide.basedOn')}</p>
         </div>
 
@@ -109,8 +119,9 @@ export default function Guide() {
             <textarea
               defaultValue={currentGuide}
               onChange={(e) => {
-                if (lang === 'en') setGuide(e.target.value)
-                else setGuideZh(e.target.value)
+                // Per-lang local edits live in a ref so React re-renders don't
+                // need to round-trip through state for every keystroke.
+                editsRef.current[lang] = e.target.value
               }}
               className="w-full p-4 text-sm text-xhs-text leading-relaxed min-h-[400px] focus:outline-none resize-none"
             />
@@ -129,14 +140,14 @@ export default function Guide() {
               className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-xhs-border rounded-full text-sm text-xhs-text active:bg-xhs-bg transition-colors"
             >
               {editing ? <Check size={16} /> : <Edit3 size={16} />}
-              <span>{editing ? (lang === 'en' ? 'Done' : '完成') : t('guide.editGuide')}</span>
+              <span>{editing ? t('guide.done') : t('guide.editGuide')}</span>
             </button>
             <button
               onClick={handleShare}
               className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-xhs-border rounded-full text-sm text-xhs-text active:bg-xhs-bg transition-colors"
             >
               {shared ? <Check size={16} className="text-xhs-green" /> : <Share2 size={16} />}
-              <span>{shared ? (lang === 'en' ? 'Shared!' : '已分享！') : t('guide.shareAsNote')}</span>
+              <span>{shared ? t('guide.shared') : t('guide.shareAsNote')}</span>
             </button>
           </div>
 

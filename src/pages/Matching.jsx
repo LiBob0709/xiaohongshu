@@ -117,14 +117,14 @@ export default function Matching() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-xhs-text">
-                      {lang === 'en' ? persona.nameEn : persona.name}
+                      {lang === 'zh' ? persona.name : persona.nameEn}
                     </span>
                     <span className="text-[10px] bg-xhs-green/10 text-xhs-green px-1.5 py-0.5 rounded-full">
                       {t('matching.online')}
                     </span>
                   </div>
                   <p className="text-xs text-xhs-text-secondary mt-0.5">
-                    {t('matching.expertise')}: {lang === 'en' ? persona.expertiseEn : persona.expertise}
+                    {t('matching.expertise')}: {lang === 'zh' ? persona.expertise : persona.expertiseEn}
                   </p>
                 </div>
                 <span className="text-[10px] text-xhs-text-secondary shrink-0">

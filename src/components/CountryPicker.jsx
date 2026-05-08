@@ -98,10 +98,10 @@ export default function CountryPicker({ open, onClose, value, onChange }) {
                   <span className="text-2xl shrink-0">{c.flag}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-xhs-text font-medium truncate">
-                      {lang === 'en' ? c.name : c.zh}
+                      {lang === 'zh' ? c.zh : c.name}
                     </div>
                     <div className="text-[11px] text-xhs-text-secondary truncate">
-                      {lang === 'en' ? c.zh : c.name} · {c.code}
+                      {lang === 'zh' ? c.name : c.zh} · {c.code}
                     </div>
                   </div>
                   {isSelected && <Check size={16} className="text-xhs-red shrink-0" />}

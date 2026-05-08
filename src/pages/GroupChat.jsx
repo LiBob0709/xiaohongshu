@@ -32,28 +32,56 @@ export default function GroupChat() {
   const description = location.state?.description || ''
   const nationality = location.state?.nationality || 'UK'
 
-  // Build the auto-sent welcome message in English. With multi-select we may have
-  // 1..N interests; "food" → "food", ["food","transport"] → "food and transportation",
-  // ["food","transport","attractions"] → "food, transportation and attractions".
+  // Per-language welcome-message template. The user's auto-sent intro to the
+  // group is composed in their selected UI language; the locals see a Chinese
+  // translation in the chat-history sent to the LLM.
+  const WELCOME_TPL = {
+    en: {
+      interest: { food: 'food', transport: 'transportation', attractions: 'attractions', shopping: 'shopping', culture: 'culture', others: 'travel tips' },
+      join: { sep: ', ', last: ' and ' },
+      ask: (q) => (q ? ` I want to know: ${q}.` : ' Could you give me some recommendations?'),
+      build: (nat, interest, ask) => `Hi everyone! I'm from ${nat} and I'm in Shanghai right now. I'm interested in ${interest}.${ask} Thank you!`,
+    },
+    zh: {
+      interest: { food: '美食', transport: '交通', attractions: '景点', shopping: '购物', culture: '文化', others: '旅行建议' },
+      join: { sep: '、', last: '和' },
+      ask: (q) => (q ? ` 我想了解：${q}。` : ' 能给我一些建议吗？'),
+      build: (nat, interest, ask) => `大家好！我来自${nat}，现在在上海。我想了解${interest}。${ask} 谢谢！`,
+    },
+    fr: {
+      interest: { food: 'la cuisine', transport: 'les transports', attractions: 'les attractions', shopping: 'le shopping', culture: 'la culture', others: 'des conseils de voyage' },
+      join: { sep: ', ', last: ' et ' },
+      ask: (q) => (q ? ` J'aimerais savoir : ${q}.` : " Pourriez-vous me donner quelques conseils ?"),
+      build: (nat, interest, ask) => `Bonjour à tous ! Je viens de ${nat} et je suis à Shanghai en ce moment. Je m'intéresse à ${interest}.${ask} Merci !`,
+    },
+    es: {
+      interest: { food: 'la comida', transport: 'el transporte', attractions: 'las atracciones', shopping: 'las compras', culture: 'la cultura', others: 'consejos de viaje' },
+      join: { sep: ', ', last: ' y ' },
+      ask: (q) => (q ? ` Quiero saber: ${q}.` : ' ¿Pueden darme algunas recomendaciones?'),
+      build: (nat, interest, ask) => `¡Hola a todos! Soy de ${nat} y estoy en Shanghái ahora mismo. Me interesa ${interest}.${ask} ¡Gracias!`,
+    },
+    ja: {
+      interest: { food: 'グルメ', transport: '交通', attractions: '観光地', shopping: 'ショッピング', culture: '文化', others: '旅行のヒント' },
+      join: { sep: '、', last: 'と' },
+      ask: (q) => (q ? ` 知りたいこと：${q}。` : ' おすすめを教えてもらえますか？'),
+      build: (nat, interest, ask) => `皆さん、こんにちは！${nat}から来ました、今上海にいます。${interest}に興味があります。${ask} ありがとうございます！`,
+    },
+    ko: {
+      interest: { food: '맛집', transport: '교통', attractions: '관광지', shopping: '쇼핑', culture: '문화', others: '여행 팁' },
+      join: { sep: ', ', last: ' 및 ' },
+      ask: (q) => (q ? ` 알고 싶은 것: ${q}.` : ' 추천 좀 해주실 수 있나요?'),
+      build: (nat, interest, ask) => `안녕하세요 여러분! ${nat}에서 왔고 지금 상하이에 있어요. ${interest}에 관심이 있어요.${ask} 감사합니다!`,
+    },
+  }
+
   const buildWelcomeMessage = () => {
-    const interestMap = {
-      food: 'food',
-      transport: 'transportation',
-      attractions: 'attractions',
-      shopping: 'shopping',
-      culture: 'culture',
-      others: 'travel tips',
-    }
-    const items = categories.map((c) => interestMap[c] || 'travel tips')
+    const tpl = WELCOME_TPL[lang] || WELCOME_TPL.en
+    const items = categories.map((c) => tpl.interest[c] || tpl.interest.others)
     const interest =
       items.length <= 1
-        ? items[0] || 'travel tips'
-        : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
-    const question = description.trim()
-    const questionLine = question
-      ? ` I want to know: ${question}.`
-      : ` Could you give me some recommendations?`
-    return `Hi everyone! I'm from ${nationality} and I'm in Shanghai right now. I'm interested in ${interest}.${questionLine} Thank you!`
+        ? items[0] || tpl.interest.others
+        : items.slice(0, -1).join(tpl.join.sep) + tpl.join.last + items[items.length - 1]
+    return tpl.build(nationality, interest, tpl.ask(description.trim()))
   }
 
   useEffect(() => {
@@ -78,7 +106,12 @@ export default function GroupChat() {
       setIsLoading(true)
 
       try {
-        const translationPromise = translateText(text, 'English', 'Chinese')
+        // ZH users speak Chinese natively → no need to translate either side.
+        // For all other languages, we round-trip user.lang ↔ Chinese.
+        const needsTranslation = lang !== 'zh'
+        const translationPromise = needsTranslation
+          ? translateText(text, lang, 'zh')
+          : Promise.resolve(null)
 
         const respondingOrder = [0, 1, 2].sort(() => Math.random() - 0.5)
         const respondCount = Math.random() > 0.3 ? 2 : 3
@@ -92,7 +125,9 @@ export default function GroupChat() {
           try {
             const chatHistory = [...messages, userMsg].filter((m) => m.type !== 'system')
             const response = await getLocalResponse(personaIdx, text, chatHistory, category)
-            const translation = await translateText(response, 'Chinese', 'English')
+            const translation = needsTranslation
+              ? await translateText(response, 'zh', lang)
+              : null
 
             setTypingUsers((prev) => prev.filter((id) => id !== persona.id))
 
@@ -103,7 +138,7 @@ export default function GroupChat() {
                 type: 'local',
                 isUser: false,
                 senderId: persona.id,
-                senderName: lang === 'en' ? persona.nameEn : persona.name,
+                senderName: lang === 'zh' ? persona.name : persona.nameEn,
                 senderAvatar: persona.avatar,
                 text: response,
                 translation,
@@ -202,7 +237,7 @@ export default function GroupChat() {
       className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full bg-xhs-red text-white disabled:bg-gray-300 disabled:text-gray-500 transition-colors"
     >
       <Sparkles size={10} />
-      <span>{lang === 'en' ? 'Guide' : '攻略'}</span>
+      <span>{t('chat.guideButton')}</span>
     </button>
   )
 
@@ -323,7 +358,7 @@ export default function GroupChat() {
               </div>
               <div>
                 <span className="text-[11px] text-xhs-text-secondary mb-1 block">
-                  {lang === 'en' ? persona.nameEn : persona.name}
+                  {lang === 'zh' ? persona.name : persona.nameEn}
                 </span>
                 <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex gap-1">
                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-typing-dot-1" />

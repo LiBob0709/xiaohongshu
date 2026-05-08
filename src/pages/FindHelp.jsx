@@ -57,9 +57,7 @@ export default function FindHelp() {
             <MapPin size={16} className="text-xhs-red" />
             <span className="text-sm font-medium text-xhs-text">{t('findHelp.location')}</span>
           </div>
-          <p className="text-sm text-xhs-text-secondary ml-6">
-            {lang === 'en' ? 'Shanghai · Nanjing West Road' : '上海 · 南京西路'}
-          </p>
+          <p className="text-sm text-xhs-text-secondary ml-6">{t('findHelp.locationName')}</p>
         </div>
 
         {/* Nationality — tappable, opens picker */}
@@ -76,7 +74,7 @@ export default function FindHelp() {
               <div className="text-xs text-xhs-text-secondary mt-0.5 flex items-center gap-1.5">
                 <span className="text-base">{country.flag}</span>
                 <span className="truncate">
-                  {lang === 'en' ? country.name : country.zh}
+                  {lang === 'zh' ? country.zh : country.name}
                 </span>
               </div>
             </div>
