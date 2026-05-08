@@ -96,7 +96,7 @@ export const translations = {
       title: 'New Note',
       coverHint: 'Add a cover image (required)',
       coverReady: 'Cover ready · tap × to replace',
-      titlePlaceholder: 'Add a title (max 40 chars)',
+      titlePlaceholder: 'Add a title',
       bodyPlaceholder: 'Add text...',
       saveDraft: 'Save draft',
       post: 'Post',
@@ -113,6 +113,13 @@ export const translations = {
       canvasTag: '✨ Shanghai Guide',
       canvasTitleFallback: 'My Shanghai Guide',
       canvasSignature: 'For travelers from {country} · RedExplore',
+      chip: { topic: 'Topic', user: 'User', poll: 'Poll', translate: 'Translate' },
+      section: {
+        tagLocation: 'Tag location',
+        public: 'Public',
+        widgets: 'Add widgets',
+        advanced: 'Advanced options',
+      },
     },
     languagePicker: {
       title: 'Choose your language',
@@ -229,6 +236,13 @@ export const translations = {
       canvasTag: '✨ 上海攻略',
       canvasTitleFallback: '我的上海攻略',
       canvasSignature: '给{country}朋友的私藏 · RedExplore',
+      chip: { topic: '话题', user: '@用户', poll: '投票', translate: '翻译' },
+      section: {
+        tagLocation: '添加地点',
+        public: '公开',
+        widgets: '添加小组件',
+        advanced: '高级选项',
+      },
     },
     languagePicker: {
       title: '选择语言',
@@ -345,6 +359,13 @@ export const translations = {
       canvasTag: '✨ Guide de Shanghai',
       canvasTitleFallback: 'Mon guide de Shanghai',
       canvasSignature: 'Pour les voyageurs de {country} · RedExplore',
+      chip: { topic: 'Sujet', user: 'Utilisateur', poll: 'Sondage', translate: 'Traduire' },
+      section: {
+        tagLocation: 'Ajouter un lieu',
+        public: 'Public',
+        widgets: 'Ajouter un widget',
+        advanced: 'Options avancées',
+      },
     },
     languagePicker: {
       title: 'Choisissez votre langue',
@@ -461,6 +482,13 @@ export const translations = {
       canvasTag: '✨ Guía de Shanghái',
       canvasTitleFallback: 'Mi guía de Shanghái',
       canvasSignature: 'Para viajeros de {country} · RedExplore',
+      chip: { topic: 'Tema', user: 'Usuario', poll: 'Encuesta', translate: 'Traducir' },
+      section: {
+        tagLocation: 'Etiquetar ubicación',
+        public: 'Público',
+        widgets: 'Añadir widgets',
+        advanced: 'Opciones avanzadas',
+      },
     },
     languagePicker: {
       title: 'Elige tu idioma',
@@ -577,6 +605,13 @@ export const translations = {
       canvasTag: '✨ 上海ガイド',
       canvasTitleFallback: '私の上海ガイド',
       canvasSignature: '{country}の旅人へ · RedExplore',
+      chip: { topic: 'トピック', user: 'ユーザー', poll: '投票', translate: '翻訳' },
+      section: {
+        tagLocation: '位置情報を追加',
+        public: '公開',
+        widgets: 'ウィジェット追加',
+        advanced: '詳細設定',
+      },
     },
     languagePicker: {
       title: '言語を選択',
@@ -693,6 +728,13 @@ export const translations = {
       canvasTag: '✨ 상하이 가이드',
       canvasTitleFallback: '나의 상하이 가이드',
       canvasSignature: '{country} 여행자에게 · RedExplore',
+      chip: { topic: '토픽', user: '유저', poll: '투표', translate: '번역' },
+      section: {
+        tagLocation: '위치 태그',
+        public: '공개',
+        widgets: '위젯 추가',
+        advanced: '고급 옵션',
+      },
     },
     languagePicker: {
       title: '언어 선택',

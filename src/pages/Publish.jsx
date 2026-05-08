@@ -2,8 +2,24 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
 import { usePostedNotes } from '../context/PostedNotesContext'
-import Header from '../components/Header'
-import { Plus, Camera, Image as ImageIcon, Type, Check, X } from 'lucide-react'
+import {
+  Plus,
+  Camera,
+  Image as ImageIcon,
+  Type,
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Hash,
+  AtSign,
+  BarChart3,
+  Languages,
+  MapPin,
+  Lock,
+  LayoutGrid,
+  Settings,
+} from 'lucide-react'
 
 // Cover gradients we cycle through for the Canvas-generated covers.
 // Picked to feel Xiaohongshu-ish (warm, soft, foodie/travel vibes).
@@ -137,13 +153,23 @@ export default function Publish() {
 
   return (
     <>
-      <Header title={t('publish.title')} showBack />
+      {/* Top bar — minimal: just a back chevron, no title (matches XHS) */}
+      <div className="flex items-center justify-between px-3 py-3 bg-white shrink-0">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-1.5 -ml-1 text-xhs-text active:opacity-60 transition-opacity"
+        >
+          <ChevronLeft size={26} />
+        </button>
+        <div className="w-6" />
+      </div>
 
-      <div className="page-container bg-white px-4 pt-4 pb-8">
-        {/* Cover slot + add button */}
+      <div className="page-container bg-white px-4 pb-32">
+        {/* Cover slots row: existing cover (if any) + add button. Reference shows
+            two thumbnails side-by-side; we follow the same layout. */}
         <div className="flex gap-3">
-          {coverDataUrl ? (
-            <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-xhs-border">
+          {coverDataUrl && (
+            <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
               <img src={coverDataUrl} alt="cover" className="w-full h-full object-cover" />
               <button
                 onClick={() => setCoverDataUrl(null)}
@@ -152,26 +178,23 @@ export default function Publish() {
                 <X size={12} />
               </button>
             </div>
-          ) : null}
+          )}
           <button
             onClick={() => setShowPicker(true)}
-            className="w-28 h-28 rounded-xl border-2 border-dashed border-xhs-border flex items-center justify-center text-xhs-text-secondary hover:border-xhs-red hover:text-xhs-red transition-colors"
+            className="w-24 h-24 rounded-xl bg-xhs-bg border border-xhs-border flex items-center justify-center text-xhs-text-secondary active:border-xhs-red active:text-xhs-red transition-colors"
           >
-            <Plus size={32} />
+            <Plus size={28} strokeWidth={1.6} />
           </button>
         </div>
-        <p className="mt-2 text-[11px] text-xhs-text-secondary">
-          {coverDataUrl ? t('publish.coverReady') : t('publish.coverHint')}
-        </p>
 
-        {/* Title */}
+        {/* Title — borderless, larger and bolder, just like XHS */}
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('publish.titlePlaceholder')}
           maxLength={40}
-          className="w-full mt-5 pb-3 border-b border-xhs-border text-base font-semibold text-xhs-text placeholder:text-xhs-text-secondary focus:outline-none focus:border-xhs-red"
+          className="w-full mt-5 text-lg font-semibold text-xhs-text placeholder:text-gray-300 placeholder:font-medium focus:outline-none"
         />
 
         {/* Body */}
@@ -179,36 +202,76 @@ export default function Publish() {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={t('publish.bodyPlaceholder')}
-          className="w-full mt-3 text-sm text-xhs-text placeholder:text-xhs-text-secondary focus:outline-none resize-none leading-relaxed"
-          rows={12}
+          className="w-full mt-2 text-sm text-xhs-text placeholder:text-gray-300 focus:outline-none resize-none leading-relaxed"
+          rows={8}
         />
 
-        {/* Post button */}
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex-1 py-3 rounded-full border border-xhs-border text-sm text-xhs-text active:bg-xhs-bg"
-          >
-            {t('publish.saveDraft')}
-          </button>
-          <button
-            onClick={handlePost}
-            disabled={!canPost}
-            className={`flex-[2] py-3 rounded-full text-sm font-semibold transition-all ${
-              canPost
-                ? 'bg-xhs-red text-white active:scale-[0.98] shadow-lg shadow-red-200'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {posted ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Check size={16} /> {t('publish.posted')}
-              </span>
-            ) : (
-              t('publish.post')
-            )}
-          </button>
+        {/* Insert chips — Topic / User / Poll / Translate. Visual only for the
+            demo, matching the bar at the bottom of the XHS composer. */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 -mx-1 px-1">
+          <ChipButton icon={<Hash size={14} />} label={t('publish.chip.topic')} />
+          <ChipButton icon={<AtSign size={14} />} label={t('publish.chip.user')} />
+          <ChipButton icon={<BarChart3 size={14} />} label={t('publish.chip.poll')} />
+          <ChipButton icon={<Languages size={14} />} label={t('publish.chip.translate')} />
         </div>
+
+        {/* Section: Tag location with mock suggestion chips */}
+        <SectionRow
+          icon={<MapPin size={18} />}
+          label={t('publish.section.tagLocation')}
+          chevron
+        />
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          {LOCATION_TAGS.map((tag) => (
+            <button
+              key={tag}
+              className="shrink-0 px-3 py-1.5 rounded-full bg-xhs-bg text-xs text-xhs-text-secondary active:text-xhs-red active:bg-xhs-red-light transition-colors"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Section: Public (visibility) */}
+        <SectionRow icon={<Lock size={18} />} label={t('publish.section.public')} chevron />
+
+        {/* Section: Add widgets */}
+        <SectionRow icon={<LayoutGrid size={18} />} label={t('publish.section.widgets')} chevron />
+
+        {/* Section: Advanced options */}
+        <SectionRow
+          icon={<Settings size={18} />}
+          label={t('publish.section.advanced')}
+          chevron
+          last
+        />
+      </div>
+
+      {/* Bottom action bar — fixed, mirrors the XHS publish page */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-xhs-border px-3 pt-3 pb-5 flex items-center gap-3 z-10">
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 py-3 rounded-full border border-xhs-border text-sm text-xhs-text active:bg-xhs-bg shrink-0"
+        >
+          {t('publish.saveDraft')}
+        </button>
+        <button
+          onClick={handlePost}
+          disabled={!canPost}
+          className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all ${
+            canPost
+              ? 'bg-xhs-red text-white active:scale-[0.98] shadow-lg shadow-red-200'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          {posted ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Check size={16} /> {t('publish.posted')}
+            </span>
+          ) : (
+            t('publish.post')
+          )}
+        </button>
       </div>
 
       {/* hidden file inputs (photo / camera) */}
@@ -296,6 +359,44 @@ export default function Publish() {
         </BottomSheet>
       )}
     </>
+  )
+}
+
+// Mock location chips that the XHS composer suggests when you tap "Tag location".
+// Visual only — picking one doesn't affect the demo's published note.
+const LOCATION_TAGS = [
+  '世博文化公园',
+  '上海千古情景区',
+  '上海世博会博物馆',
+  '东浩兰生',
+  '徐家汇',
+  '南京西路',
+  '外滩',
+  '田子坊',
+]
+
+// "Topic / User / Poll / Translate" chip used above the section list.
+function ChipButton({ icon, label }) {
+  return (
+    <button className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-xhs-bg text-xhs-text text-xs font-medium active:bg-gray-200 transition-colors">
+      {icon}
+      <span>{label}</span>
+    </button>
+  )
+}
+
+// Settings-row in the composer's section list (Tag location, Public, etc.).
+function SectionRow({ icon, label, chevron, last = false }) {
+  return (
+    <button
+      className={`w-full flex items-center gap-3 py-3.5 ${
+        last ? '' : 'border-b border-xhs-border'
+      } active:bg-xhs-bg transition-colors`}
+    >
+      <span className="text-xhs-text">{icon}</span>
+      <span className="flex-1 text-left text-sm text-xhs-text">{label}</span>
+      {chevron && <ChevronRight size={18} className="text-xhs-text-secondary" />}
+    </button>
   )
 }
 
