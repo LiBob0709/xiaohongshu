@@ -1,0 +1,252 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useLang } from '../context/LanguageContext'
+import {
+  Search,
+  MessageCircle,
+  Menu,
+  User,
+  MapPin,
+  Compass,
+  Home as HomeIcon,
+  ShoppingBag,
+  Plus,
+  ChevronDown,
+} from 'lucide-react'
+
+function LangButton() {
+  const { toggleLang, t } = useLang()
+  return (
+    <button
+      onClick={toggleLang}
+      className="px-2.5 py-1 text-xs font-medium rounded-full border border-xhs-border text-xhs-text-secondary hover:bg-xhs-bg transition-colors shrink-0"
+    >
+      {t('lang.switchTo')}
+    </button>
+  )
+}
+
+const MOCK_NOTES = [
+  {
+    id: 1,
+    gradient: 'from-orange-400 to-red-500',
+    emoji: '🥟',
+    titleEn: 'Best Xiaolongbao in Shanghai',
+    titleZh: '上海最好吃的小笼包合集',
+    authorEn: 'FoodieJane',
+    authorZh: '美食家小杰',
+    likes: '2.3k',
+    height: 'h-52',
+  },
+  {
+    id: 2,
+    gradient: 'from-blue-400 to-purple-500',
+    emoji: '🏯',
+    titleEn: 'Hidden Temples in Beijing',
+    titleZh: '北京隐藏的小众寺庙',
+    authorEn: 'CultureTrip',
+    authorZh: '文化旅行者',
+    likes: '5.1k',
+    height: 'h-64',
+  },
+  {
+    id: 3,
+    gradient: 'from-green-400 to-teal-500',
+    emoji: '🚇',
+    titleEn: 'Shanghai Metro Guide',
+    titleZh: '上海地铁出行全攻略',
+    authorEn: 'TravelPro',
+    authorZh: '旅行达人',
+    likes: '1.8k',
+    height: 'h-48',
+  },
+  {
+    id: 4,
+    gradient: 'from-pink-400 to-rose-500',
+    emoji: '🌸',
+    titleEn: 'Cherry Blossoms in Spring',
+    titleZh: '春日赏樱花攻略',
+    authorEn: 'NatureLover',
+    authorZh: '自然爱好者',
+    likes: '3.7k',
+    height: 'h-56',
+  },
+  {
+    id: 5,
+    gradient: 'from-amber-400 to-orange-500',
+    emoji: '☕',
+    titleEn: 'Cutest Cafés in Chengdu',
+    titleZh: '成都最可爱的咖啡馆',
+    authorEn: 'CaféHunter',
+    authorZh: '咖啡猎人',
+    likes: '4.2k',
+    height: 'h-60',
+  },
+  {
+    id: 6,
+    gradient: 'from-violet-400 to-indigo-500',
+    emoji: '🎭',
+    titleEn: 'Night Markets You Must Visit',
+    titleZh: '必去的夜市推荐',
+    authorEn: 'NightOwl',
+    authorZh: '夜猫子',
+    likes: '6.5k',
+    height: 'h-44',
+  },
+]
+
+function NoteCard({ note, lang }) {
+  return (
+    <div className="rounded-xl overflow-hidden bg-white shadow-sm border border-xhs-border">
+      <div className={`${note.height} bg-gradient-to-br ${note.gradient} flex items-center justify-center`}>
+        <span className="text-5xl">{note.emoji}</span>
+      </div>
+      <div className="p-2.5">
+        <p className="text-xs font-medium text-xhs-text leading-snug line-clamp-2">
+          {lang === 'en' ? note.titleEn : note.titleZh}
+        </p>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-[8px]">👤</span>
+            </div>
+            <span className="text-[10px] text-xhs-text-secondary">
+              {lang === 'en' ? note.authorEn : note.authorZh}
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <span className="text-[10px] text-xhs-text-secondary">❤️ {note.likes}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const TOP_TABS = ['following', 'explore', 'nearby']
+const SUB_TABS_KEYS = ['forYou', 'video', 'live', 'series', 'fashion']
+
+export default function Home() {
+  const navigate = useNavigate()
+  const { lang, t } = useLang()
+  const [topTab, setTopTab] = useState('explore')
+  const [subTab, setSubTab] = useState('forYou')
+
+  return (
+    <>
+      {/* Top bar: chat icon | tabs | search */}
+      <div className="flex items-center gap-2 px-3 py-3 bg-white shrink-0">
+        <button className="p-1.5 -ml-1 text-xhs-text">
+          <Menu size={24} />
+        </button>
+        <div className="flex-1 flex items-center justify-center gap-5">
+          {TOP_TABS.map((key) => {
+            const active = topTab === key
+            return (
+              <button
+                key={key}
+                onClick={() => setTopTab(key)}
+                className="relative flex flex-col items-center"
+              >
+                <span
+                  className={`text-base ${
+                    active ? 'font-bold text-xhs-text' : 'text-xhs-text-secondary'
+                  }`}
+                >
+                  {t(`home.topTabs.${key}`)}
+                </span>
+                {active && (
+                  <span className="absolute -bottom-1 w-5 h-0.5 bg-xhs-red rounded-full" />
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <button className="p-1.5 text-xhs-text">
+          <Search size={20} />
+        </button>
+        <LangButton />
+      </div>
+
+      {/* Sub-tabs (only on Explore — matches XHS) */}
+      {topTab === 'explore' && (
+        <div className="flex items-center gap-4 px-4 py-2 bg-white border-b border-xhs-border shrink-0 overflow-x-auto">
+          {SUB_TABS_KEYS.map((key) => {
+            const active = subTab === key
+            return (
+              <button
+                key={key}
+                onClick={() => setSubTab(key)}
+                className={`text-xs whitespace-nowrap pb-1 ${
+                  active
+                    ? 'font-semibold text-xhs-text border-b-2 border-xhs-red'
+                    : 'text-xhs-text-secondary'
+                }`}
+              >
+                {t(`home.subTabs.${key}`)}
+              </button>
+            )
+          })}
+          <button className="text-xhs-text-secondary ml-auto shrink-0">
+            <ChevronDown size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Nearby-only banner with Find Locals button */}
+      {topTab === 'nearby' && (
+        <div className="mx-4 mt-3 p-3 bg-gradient-to-r from-xhs-red to-pink-500 rounded-xl text-white flex items-center gap-3 shrink-0">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin size={14} />
+              <span className="text-xs font-medium truncate">
+                {lang === 'en' ? 'Shanghai · Nanjing West Road' : '上海 · 南京西路'}
+              </span>
+            </div>
+            <p className="text-[11px] opacity-90">
+              {lang === 'en'
+                ? 'Need help exploring? Find a local now!'
+                : '需要帮助探索？立刻找一位本地人！'}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/find-help')}
+            className="shrink-0 flex items-center gap-1 bg-white text-xhs-red px-3 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-transform"
+          >
+            <Compass size={14} />
+            <span>{t('home.findLocals')}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Feed (shared across all three top tabs in this demo) */}
+      <div className="page-container px-3 pt-3 pb-20 bg-xhs-bg">
+        <div className="masonry-grid">
+          {MOCK_NOTES.map((note) => (
+            <NoteCard key={note.id} note={note} lang={lang} />
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Nav: 5 items, center "+" stands out */}
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-around py-2 pb-5 bg-white border-t border-xhs-border z-10">
+        <NavItem icon={<HomeIcon size={22} />} label={t('home.nav.home')} active />
+        <NavItem icon={<ShoppingBag size={22} />} label={t('home.nav.market')} />
+        <button className="-mt-6 w-12 h-12 rounded-2xl bg-xhs-red flex items-center justify-center text-white shadow-lg shadow-red-200 active:scale-95 transition-transform">
+          <Plus size={26} strokeWidth={3} />
+        </button>
+        <NavItem icon={<MessageCircle size={22} />} label={t('home.nav.messages')} />
+        <NavItem icon={<User size={22} />} label={t('home.nav.me')} />
+      </div>
+    </>
+  )
+}
+
+function NavItem({ icon, label, active }) {
+  return (
+    <div className={`flex flex-col items-center gap-0.5 ${active ? 'text-xhs-text' : 'text-xhs-text-secondary'}`}>
+      {icon}
+      <span className="text-[10px]">{label}</span>
+    </div>
+  )
+}

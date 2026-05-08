@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+  --color-xhs-red: #FF2442;
+  --color-xhs-red-light: #FFF0F0;
+  --color-xhs-bg: #FAFAFA;
+  --color-xhs-white: #FFFFFF;
+  --color-xhs-text: #333333;
+  --color-xhs-text-secondary: #999999;
+  --color-xhs-border: #EEEEEE;
+  --color-xhs-blue: #4A90D9;
+  --color-xhs-green: #07C160;
+  --color-xhs-chat-left: #F5F5F5;
+  --color-xhs-chat-right: #FF2442;
+  --color-xhs-overlay: rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+}
+
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 430px) {
+  .phone-frame {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 431px) {
+  .phone-frame {
+    border-radius: 40px;
+    box-shadow:
+      0 0 0 12px #1a1a1a,
+      0 0 0 14px #333,
+      0 25px 60px rgba(0, 0, 0, 0.4);
+    padding-top: 12px;
+  }
+}
+
+.page-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Matching radar animation */
+@keyframes radar-ping {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes radar-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes user-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-radar-ping {
+  animation: radar-ping 2s ease-out infinite;
+}
+
+.animate-radar-rotate {
+  animation: radar-rotate 4s linear infinite;
+}
+
+.animate-user-pop {
+  animation: user-pop 0.5s ease-out forwards;
+}
+
+.animate-float-up {
+  animation: float-up 0.4s ease-out forwards;
+}
+
+.animate-typing-dot-1 { animation: typing-bounce 1.4s infinite 0s; }
+.animate-typing-dot-2 { animation: typing-bounce 1.4s infinite 0.2s; }
+.animate-typing-dot-3 { animation: typing-bounce 1.4s infinite 0.4s; }
+
+.shimmer-bg {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.note-card-img {
+  aspect-ratio: 3/4;
+  object-fit: cover;
+}
+
+/* Masonry-like grid for home feed */
+.masonry-grid {
+  column-count: 2;
+  column-gap: 8px;
+}
+
+.masonry-grid > * {
+  break-inside: avoid;
+  margin-bottom: 8px;
+}

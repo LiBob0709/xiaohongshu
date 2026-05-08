@@ -1,0 +1,36 @@
+- generic [ref=e3]:
+  - generic [ref=e115]:
+    - button [ref=e117]:
+      - img [ref=e118]
+    - heading "Find Locals" [level=1] [ref=e120]
+    - button "中文" [ref=e122]
+  - generic [ref=e123]:
+    - generic [ref=e124]:
+      - generic [ref=e125]:
+        - img [ref=e126]
+        - generic [ref=e129]: Your Location
+      - paragraph [ref=e130]: Shanghai · Nanjing West Road
+    - generic [ref=e131]:
+      - heading "What do you need help with?" [level=2] [ref=e132]
+      - paragraph [ref=e133]: We'll match you with locals who can help
+    - generic [ref=e134]:
+      - button "🍜 Food & Drinks" [active] [ref=e135]:
+        - generic [ref=e136]: 🍜
+        - generic [ref=e137]: Food & Drinks
+      - button "🚇 Transport" [ref=e138]:
+        - generic [ref=e139]: 🚇
+        - generic [ref=e140]: Transport
+      - button "🏛️ Attractions" [ref=e141]:
+        - generic [ref=e142]: 🏛️
+        - generic [ref=e143]: Attractions
+      - button "🛍️ Shopping" [ref=e144]:
+        - generic [ref=e145]: 🛍️
+        - generic [ref=e146]: Shopping
+      - button "🆘 Emergency" [ref=e147]:
+        - generic [ref=e148]: 🆘
+        - generic [ref=e149]: Emergency
+      - button "🎭 Culture" [ref=e150]:
+        - generic [ref=e151]: 🎭
+        - generic [ref=e152]: Culture
+    - textbox "Describe what you need..." [ref=e154]
+    - button "Find Nearby Locals" [ref=e156]

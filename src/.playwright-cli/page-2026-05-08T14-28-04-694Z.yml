@@ -1,0 +1,12 @@
+- generic [ref=e3]:
+  - generic [ref=e267]:
+    - button [ref=e269]:
+      - img [ref=e270]
+    - heading "Your Personal Travel Guide" [level=1] [ref=e272]
+    - button "中文" [ref=e274]
+  - generic [ref=e275]:
+    - generic [ref=e276]:
+      - img [ref=e277]
+      - generic [ref=e279]: ✨
+    - paragraph [ref=e280]: Generating your travel guide...
+    - paragraph [ref=e281]: AI is summarizing your conversation into a personalized guide

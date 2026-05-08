@@ -1,0 +1,9 @@
+- generic [ref=e3]:
+  - generic [ref=e157]:
+    - button [ref=e159]:
+      - img [ref=e160]
+    - heading "Find Locals" [level=1] [ref=e162]
+    - button "中文" [ref=e164]
+  - generic [ref=e165]:
+    - generic [ref=e172]: 📍
+    - paragraph [ref=e175]: Finding locals near you...
