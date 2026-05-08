@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
+import { usePostedNotes } from '../context/PostedNotesContext'
 import Header from '../components/Header'
 import { Plus, Camera, Image as ImageIcon, Type, Check, X } from 'lucide-react'
 
@@ -19,6 +20,7 @@ export default function Publish() {
   const navigate = useNavigate()
   const location = useLocation()
   const { lang, t } = useLang()
+  const { addNote } = usePostedNotes()
 
   const initialTitle = location.state?.title || ''
   const initialBody = location.state?.body || ''
@@ -76,8 +78,8 @@ export default function Publish() {
     ctx.arc(120, H - 160, 260, 0, Math.PI * 2)
     ctx.fill()
 
-    // Top tag pill: "✨ Shanghai Guide"
-    const tag = lang === 'en' ? '✨ Shanghai Guide' : '✨ 上海攻略'
+    // Top tag pill — localized via t() (e.g. "✨ Shanghai Guide" / "✨ Guide de Shanghai")
+    const tag = t('publish.canvasTag')
     ctx.font = 'bold 36px -apple-system, "PingFang SC", sans-serif'
     const tagW = ctx.measureText(tag).width + 60
     ctx.fillStyle = 'rgba(255,255,255,0.95)'
@@ -90,16 +92,16 @@ export default function Publish() {
     // Title (auto-wrapped, big, bold, white)
     ctx.fillStyle = '#fff'
     ctx.textBaseline = 'top'
-    const titleText = (text || (lang === 'en' ? 'My Shanghai Guide' : '我的上海攻略')).trim()
+    const titleText = (text || t('publish.canvasTitleFallback')).trim()
     drawWrappedText(ctx, titleText, 60, 230, W - 120, 90, 'bold 78px -apple-system, "PingFang SC", sans-serif')
 
-    // Bottom signature
+    // Bottom signature — for ZH we substitute the friendly "<country>朋友" form,
+    // for everything else we use the country name directly. The template comes
+    // from translations and uses {country} as the substitution slot.
     ctx.fillStyle = 'rgba(255,255,255,0.92)'
     ctx.font = '32px -apple-system, "PingFang SC", sans-serif'
-    const sig =
-      lang === 'en'
-        ? `For travelers from ${nationality} · RedExplore`
-        : `给${nationalityZhDisplay(nationality)}的私藏 · RedExplore`
+    const countryToken = lang === 'zh' ? nationalityZhDisplay(nationality) : nationality
+    const sig = t('publish.canvasSignature').replace('{country}', countryToken)
     ctx.fillText(sig, 60, H - 90)
 
     return canvas.toDataURL('image/png')
@@ -118,6 +120,16 @@ export default function Publish() {
 
   const handlePost = () => {
     setPosted(true)
+    // Push the note into the shared store so it shows up on Home → Nearby.
+    // We grab the current title/body verbatim (as the user edited them) plus
+    // the cover data URL we just generated/uploaded.
+    addNote({
+      title: title.trim(),
+      body: body.trim(),
+      coverDataUrl,
+      lang,
+      nationality,
+    })
     setTimeout(() => navigate('/'), 1400)
   }
 

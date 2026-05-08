@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Check, X } from 'lucide-react'
-import { useLang, SUPPORTED_LANGUAGES } from '../context/LanguageContext'
+import { useLang } from '../context/LanguageContext'
+import { SUPPORTED_LANGUAGES } from '../i18n/languages'
 
 // Bottom-sheet language picker. Listing comes from SUPPORTED_LANGUAGES so any
 // new language added there shows up automatically. Tapping a row sets the lang

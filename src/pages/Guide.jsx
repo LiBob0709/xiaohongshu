@@ -1,23 +1,23 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
 import { generateGuide } from '../api/mimo'
 import Header from '../components/Header'
-import { Share2, Edit3, BookmarkPlus, Home, Check, Loader2 } from 'lucide-react'
+import { Edit3, BookmarkPlus, Home, Check, Loader2 } from 'lucide-react'
 
 export default function Guide() {
   const navigate = useNavigate()
   const location = useLocation()
   const { lang, t } = useLang()
   // Cache guides by language so switching back to one we've already generated
-  // is instant. Initial fetch + every language switch lazily generates the
-  // missing entry.
+  // is instant. Edits made in one language stay isolated (we mutate the
+  // entry for that lang only). The textarea is uncontrolled (defaultValue +
+  // key={lang}) so per-keystroke state writes don't re-render the input.
   const [guides, setGuides] = useState({})
-  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [shared, setShared] = useState(false)
-  // Local edits per language so editing in one doesn't blow away another.
-  const editsRef = useRef({})
+  // Loading is derived: an entry is "loading" until we've written *something*
+  // (success body or failure-message string) into the cache for this lang.
+  const loading = guides[lang] === undefined
 
   const messages = location.state?.messages || []
   const category = location.state?.category || 'food'
@@ -25,14 +25,10 @@ export default function Guide() {
   const nationality = location.state?.nationality || 'UK'
 
   useEffect(() => {
-    // Skip if we already have a guide for this language (cache hit, e.g. user
-    // toggled away then back).
-    if (guides[lang] !== undefined) {
-      setLoading(false)
-      return
-    }
+    // Skip the API call if we already have a guide cached for this language.
+    // `loading` is derived from the cache, so we don't need to flip a flag.
+    if (guides[lang] !== undefined) return
     let cancelled = false
-    setLoading(true)
     generateGuide(messages, categories, lang, nationality)
       .then((text) => {
         if (cancelled) return
@@ -43,21 +39,13 @@ export default function Guide() {
         console.error('Guide generation error:', err)
         setGuides((prev) => ({ ...prev, [lang]: t('guide.failed') }))
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
-  const currentGuide = editsRef.current[lang] ?? guides[lang] ?? ''
-
-  const handleShare = () => {
-    setShared(true)
-    setTimeout(() => setShared(false), 2000)
-  }
+  const currentGuide = guides[lang] ?? ''
 
   // Pull the first markdown H1 as the title, and the rest as the body.
   // Falls back gracefully if the model didn't follow the format.
@@ -117,11 +105,14 @@ export default function Guide() {
         <div className="mx-4 mt-4 bg-white rounded-2xl border border-xhs-border overflow-hidden">
           {editing ? (
             <textarea
+              key={lang}
               defaultValue={currentGuide}
               onChange={(e) => {
-                // Per-lang local edits live in a ref so React re-renders don't
-                // need to round-trip through state for every keystroke.
-                editsRef.current[lang] = e.target.value
+                // Update the cached entry for this lang. The textarea is
+                // uncontrolled (defaultValue + key), so per-keystroke setState
+                // doesn't fight the cursor — keystrokes stay snappy.
+                const next = e.target.value
+                setGuides((prev) => ({ ...prev, [lang]: next }))
               }}
               className="w-full p-4 text-sm text-xhs-text leading-relaxed min-h-[400px] focus:outline-none resize-none"
             />
@@ -134,22 +125,13 @@ export default function Guide() {
 
         {/* Actions */}
         <div className="px-4 mt-4 space-y-3 pb-8">
-          <div className="flex gap-3">
-            <button
-              onClick={() => setEditing(!editing)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-xhs-border rounded-full text-sm text-xhs-text active:bg-xhs-bg transition-colors"
-            >
-              {editing ? <Check size={16} /> : <Edit3 size={16} />}
-              <span>{editing ? t('guide.done') : t('guide.editGuide')}</span>
-            </button>
-            <button
-              onClick={handleShare}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-xhs-border rounded-full text-sm text-xhs-text active:bg-xhs-bg transition-colors"
-            >
-              {shared ? <Check size={16} className="text-xhs-green" /> : <Share2 size={16} />}
-              <span>{shared ? t('guide.shared') : t('guide.shareAsNote')}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setEditing(!editing)}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-xhs-border rounded-full text-sm text-xhs-text active:bg-xhs-bg transition-colors"
+          >
+            {editing ? <Check size={16} /> : <Edit3 size={16} />}
+            <span>{editing ? t('guide.done') : t('guide.editGuide')}</span>
+          </button>
 
           <button
             onClick={handlePublish}

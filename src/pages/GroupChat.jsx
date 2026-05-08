@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
 import { getLocalResponse, translateText, LOCAL_PERSONAS } from '../api/mimo'
+import { pickChatNote } from '../data/mockChatNotes'
 import Header from '../components/Header'
+import NoteViewer from '../components/NoteViewer'
+import { normalizeChatNote } from '../data/noteShape'
 import { Send, Sparkles } from 'lucide-react'
 
 export default function GroupChat() {
@@ -18,6 +21,9 @@ export default function GroupChat() {
   // original (a local's actual reply, or the user's own translated-to-Chinese
   // version for context).
   const [chineseShown, setChineseShown] = useState(() => new Set())
+  // Currently-open linked-note viewer (null when closed). Click a chat note
+  // card → set; close → null.
+  const [openNote, setOpenNote] = useState(null)
   const toggleChinese = (id) =>
     setChineseShown((prev) => {
       const next = new Set(prev)
@@ -28,7 +34,12 @@ export default function GroupChat() {
   const bottomRef = useRef(null)
 
   const category = location.state?.category || 'food'
-  const categories = location.state?.categories || [category]
+  // Stabilized to keep the sendMessage useCallback's deps from changing every
+  // render (the `||` fallback creates a new array each time otherwise).
+  const categories = useMemo(
+    () => location.state?.categories || [category],
+    [location.state?.categories, category],
+  )
   const description = location.state?.description || ''
   const nationality = location.state?.nationality || 'UK'
 
@@ -115,6 +126,10 @@ export default function GroupChat() {
 
         const respondingOrder = [0, 1, 2].sort(() => Math.random() - 0.5)
         const respondCount = Math.random() > 0.3 ? 2 : 3
+        // Pick which response (within this turn) gets a Xiaohongshu note card
+        // attached. The product spec is "at least one local response per turn
+        // shares a post" — we pick exactly one at random.
+        const noteAttachIdx = Math.floor(Math.random() * respondCount)
 
         for (let i = 0; i < respondCount; i++) {
           const personaIdx = respondingOrder[i]
@@ -128,6 +143,7 @@ export default function GroupChat() {
             const translation = needsTranslation
               ? await translateText(response, 'zh', lang)
               : null
+            const linkedNote = i === noteAttachIdx ? pickChatNote(categories) : null
 
             setTypingUsers((prev) => prev.filter((id) => id !== persona.id))
 
@@ -142,6 +158,7 @@ export default function GroupChat() {
                 senderAvatar: persona.avatar,
                 text: response,
                 translation,
+                linkedNote,
                 timestamp: new Date(),
               },
             ])
@@ -166,7 +183,7 @@ export default function GroupChat() {
         setTypingUsers([])
       }
     },
-    [isLoading, messages, category, lang]
+    [isLoading, messages, category, categories, lang]
   )
 
   // Always-fresh handle to sendMessage so the auto-welcome timer below uses
@@ -334,6 +351,14 @@ export default function GroupChat() {
                 <div className="bg-white px-3.5 py-2.5 rounded-2xl rounded-tl-sm text-sm text-xhs-text leading-relaxed shadow-sm">
                   {display}
                 </div>
+                {/* Linked Xiaohongshu note card — clickable, opens NoteViewer */}
+                {msg.linkedNote && (
+                  <ChatNoteCard
+                    note={msg.linkedNote}
+                    lang={lang}
+                    onOpen={() => setOpenNote(normalizeChatNote(msg.linkedNote, lang))}
+                  />
+                )}
                 {hasFlip && (
                   <button
                     onClick={() => toggleChinese(msg.id)}
@@ -410,6 +435,38 @@ export default function GroupChat() {
           <Send size={16} />
         </button>
       </div>
+
+      {/* Linked-note overlay (Xiaohongshu detail page mock) */}
+      {openNote && <NoteViewer note={openNote} onClose={() => setOpenNote(null)} />}
     </>
+  )
+}
+
+// Compact "shared post" card that hangs off a chat bubble. Layout mimics
+// Xiaohongshu's "shared note" card inside DMs: square thumbnail on the left,
+// 2-line title + author/likes line on the right.
+function ChatNoteCard({ note, lang, onOpen }) {
+  const title = lang === 'zh' ? note.title.zh : note.title.en
+  const author = lang === 'zh' ? note.author.zh : note.author.en
+  return (
+    <button
+      onClick={onOpen}
+      className="mt-2 w-full max-w-[280px] flex items-stretch gap-2 p-1.5 bg-white border border-xhs-border rounded-xl text-left hover:border-xhs-red active:scale-[0.99] transition-all overflow-hidden"
+    >
+      <div
+        className={`w-16 h-16 shrink-0 rounded-lg bg-gradient-to-br ${note.gradient} flex items-center justify-center`}
+      >
+        <span className="text-3xl">{note.emoji}</span>
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col py-0.5">
+        <p className="text-[12px] font-medium text-xhs-text leading-snug line-clamp-2">
+          {title}
+        </p>
+        <div className="mt-auto flex items-center justify-between gap-2">
+          <span className="text-[10px] text-xhs-text-secondary truncate">@{author}</span>
+          <span className="text-[10px] text-xhs-text-secondary shrink-0">❤️ {note.likes}</span>
+        </div>
+      </div>
+    </button>
   )
 }

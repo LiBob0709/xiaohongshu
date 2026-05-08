@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useLang, SUPPORTED_LANGUAGES } from '../context/LanguageContext'
+import { useLang } from '../context/LanguageContext'
+import { SUPPORTED_LANGUAGES } from '../i18n/languages'
 import { ChevronLeft, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import LanguagePicker from './LanguagePicker'

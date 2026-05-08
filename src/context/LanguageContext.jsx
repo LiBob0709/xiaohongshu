@@ -3,17 +3,6 @@ import { translations } from '../i18n/translations'
 
 const LanguageContext = createContext()
 
-// Supported UI languages. The picker renders this list in order.
-// Adding a new language: drop a section into translations.js and add an entry here.
-export const SUPPORTED_LANGUAGES = [
-  { code: 'en', flag: '🇬🇧', label: 'English', name: 'English' },
-  { code: 'zh', flag: '🇨🇳', label: '中文', name: 'Chinese' },
-  { code: 'fr', flag: '🇫🇷', label: 'Français', name: 'French' },
-  { code: 'es', flag: '🇪🇸', label: 'Español', name: 'Spanish' },
-  { code: 'ja', flag: '🇯🇵', label: '日本語', name: 'Japanese' },
-  { code: 'ko', flag: '🇰🇷', label: '한국어', name: 'Korean' },
-]
-
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState('en')
 

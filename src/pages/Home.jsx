@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useLang, SUPPORTED_LANGUAGES } from '../context/LanguageContext'
+import { useLang } from '../context/LanguageContext'
+import { SUPPORTED_LANGUAGES } from '../i18n/languages'
 import {
   Search,
   MessageCircle,
@@ -15,6 +16,9 @@ import {
 } from 'lucide-react'
 import FindLocalsSplash from '../components/FindLocalsSplash'
 import LanguagePicker from '../components/LanguagePicker'
+import NoteViewer from '../components/NoteViewer'
+import { normalizePostedNote } from '../data/noteShape'
+import { usePostedNotes } from '../context/PostedNotesContext'
 
 // One-shot guard for the Find Locals onboarding splash. Lives at module scope
 // so it survives in-app navigation (Home → FindHelp → back to Home doesn't
@@ -148,6 +152,10 @@ export default function Home() {
   // highlighting the product. Closing the splash (X or CTA) is what kicks
   // off navigation. Subsequent taps skip straight to /find-help.
   const [splashOpen, setSplashOpen] = useState(false)
+  // Posted notes (from /publish) — surfaced at the top of the Nearby feed
+  // and openable in the NoteViewer modal.
+  const { notes: postedNotes } = usePostedNotes()
+  const [openNote, setOpenNote] = useState(null)
 
   const handleFindLocals = () => {
     if (!splashSeenThisSession) {
@@ -244,21 +252,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* Feed (shared across all three top tabs in this demo) */}
+      {/* Feed (shared across all three top tabs in this demo). On Nearby we
+          prepend any user-posted notes so the most recent publish shows up
+          as the first card in the masonry. */}
       <div className="page-container px-3 pt-3 pb-20 bg-xhs-bg">
         <div className="masonry-grid">
+          {topTab === 'nearby' &&
+            postedNotes.map((p) => (
+              <PostedNoteCard
+                key={p.id}
+                posted={p}
+                onOpen={() => setOpenNote(normalizePostedNote(p))}
+              />
+            ))}
           {MOCK_NOTES.map((note) => (
             <NoteCard key={note.id} note={note} lang={lang} />
           ))}
         </div>
       </div>
 
-      {/* Bottom Nav: 5 items, center "+" stands out */}
+      {/* Bottom Nav: 5 items. "+" sits inline with the others (no lift),
+          but keeps its red square treatment so it still reads as the
+          primary action. */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-around py-2 pb-5 bg-white border-t border-xhs-border z-10">
         <NavItem icon={<HomeIcon size={22} />} label={t('home.nav.home')} active />
         <NavItem icon={<ShoppingBag size={22} />} label={t('home.nav.market')} />
-        <button className="-mt-6 w-12 h-12 rounded-2xl bg-xhs-red flex items-center justify-center text-white shadow-lg shadow-red-200 active:scale-95 transition-transform">
-          <Plus size={26} strokeWidth={3} />
+        <button
+          aria-label="New post"
+          className="w-9 h-7 rounded-xl bg-xhs-red flex items-center justify-center text-white shadow-sm active:scale-95 transition-transform"
+        >
+          <Plus size={20} strokeWidth={3} />
         </button>
         <NavItem icon={<MessageCircle size={22} />} label={t('home.nav.messages')} />
         <NavItem icon={<User size={22} />} label={t('home.nav.me')} />
@@ -268,7 +291,49 @@ export default function Home() {
       {splashOpen && <FindLocalsSplash onClose={handleCloseSplash} />}
 
       <LanguagePicker open={langPickerOpen} onClose={() => setLangPickerOpen(false)} />
+
+      {/* Detail viewer for tapped posted notes */}
+      {openNote && <NoteViewer note={openNote} onClose={() => setOpenNote(null)} />}
     </>
+  )
+}
+
+// Masonry card for a user-posted note. Cover is the data URL the user picked
+// or generated in /publish. Click → opens the full NoteViewer.
+function PostedNoteCard({ posted, onOpen }) {
+  return (
+    <button
+      onClick={onOpen}
+      className="block w-full text-left rounded-xl overflow-hidden bg-white shadow-sm border border-xhs-border ring-2 ring-xhs-red/20 active:scale-[0.99] transition-transform"
+    >
+      <div className="relative aspect-[3/4] bg-gray-100">
+        {posted.coverDataUrl ? (
+          <img src={posted.coverDataUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-xhs-red to-pink-500 flex items-center justify-center text-5xl">
+            ✨
+          </div>
+        )}
+        {/* "Just posted" pill so the user sees their action landed */}
+        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-xhs-red text-white text-[10px] font-semibold shadow">
+          ✨ Just posted
+        </span>
+      </div>
+      <div className="p-2.5">
+        <p className="text-xs font-medium text-xhs-text leading-snug line-clamp-2">
+          {posted.title || '(untitled)'}
+        </p>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-[8px]">😎</span>
+            </div>
+            <span className="text-[10px] text-xhs-text-secondary">You</span>
+          </div>
+          <span className="text-[10px] text-xhs-text-secondary">❤️ 0</span>
+        </div>
+      </div>
+    </button>
   )
 }
 
