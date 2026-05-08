@@ -13,6 +13,18 @@ export default function GroupChat() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [typingUsers, setTypingUsers] = useState([])
+  // Per-message "show Chinese (original)" toggle. Each message renders its
+  // English form by default — tap the language pill to flip to the Chinese
+  // original (a local's actual reply, or the user's own translated-to-Chinese
+  // version for context).
+  const [chineseShown, setChineseShown] = useState(() => new Set())
+  const toggleChinese = (id) =>
+    setChineseShown((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   const bottomRef = useRef(null)
 
   const category = location.state?.category || 'food'
@@ -235,17 +247,37 @@ export default function GroupChat() {
             )
           }
 
+          // For both sides: msg.text is the original-language string, msg.translation
+          // is the other-language form. User typed English → text=EN, translation=ZH.
+          // Local replied Chinese → text=ZH, translation=EN. We always default to
+          // showing the English form, regardless of side.
+          const englishText = msg.isUser ? msg.text : msg.translation
+          const chineseText = msg.isUser ? msg.translation : msg.text
+          const showChinese = chineseShown.has(msg.id)
+          // While the locals' translation is still in flight, fall back to the
+          // raw text so the bubble isn't blank.
+          const display = showChinese ? chineseText : englishText || msg.text
+          const hasFlip = Boolean(englishText && chineseText)
+          // Label is content-relative: button shows "Translate" when the bubble
+          // currently displays the message's original language (tap → translate),
+          // and "See original" when displaying the translated form (tap → revert).
+          const showingOriginal = msg.isUser ? !showChinese : showChinese
+          const flipLabel = showingOriginal ? t('chat.translate') : t('chat.seeOriginal')
+
           if (msg.isUser) {
             return (
               <div key={msg.id} className="flex justify-end gap-2">
-                <div className="max-w-[75%]">
+                <div className="max-w-[75%] flex flex-col items-end">
                   <div className="bg-xhs-red text-white px-3.5 py-2.5 rounded-2xl rounded-tr-sm text-sm leading-relaxed">
-                    {msg.text}
+                    {display}
                   </div>
-                  {msg.translation && (
-                    <div className="mt-1 px-3 py-1.5 bg-white rounded-xl text-[11px] text-xhs-text-secondary border border-xhs-border">
-                      🌐 {msg.translation}
-                    </div>
+                  {hasFlip && (
+                    <button
+                      onClick={() => toggleChinese(msg.id)}
+                      className="mt-1 text-[12px] text-xhs-blue active:opacity-70 transition-opacity"
+                    >
+                      {flipLabel}
+                    </button>
                   )}
                 </div>
                 <div className="w-8 h-8 rounded-full bg-xhs-blue flex items-center justify-center text-[10px] text-white shrink-0">
@@ -265,12 +297,15 @@ export default function GroupChat() {
                   {msg.senderName}
                 </span>
                 <div className="bg-white px-3.5 py-2.5 rounded-2xl rounded-tl-sm text-sm text-xhs-text leading-relaxed shadow-sm">
-                  {msg.text}
+                  {display}
                 </div>
-                {msg.translation && (
-                  <div className="mt-1 px-3 py-1.5 bg-blue-50 rounded-xl text-[11px] text-xhs-blue border border-blue-100">
-                    🌐 {msg.translation}
-                  </div>
+                {hasFlip && (
+                  <button
+                    onClick={() => toggleChinese(msg.id)}
+                    className="mt-1 text-[12px] text-xhs-blue active:opacity-70 transition-opacity"
+                  >
+                    {flipLabel}
+                  </button>
                 )}
               </div>
             </div>

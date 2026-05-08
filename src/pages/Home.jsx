@@ -13,6 +13,13 @@ import {
   Plus,
   ChevronDown,
 } from 'lucide-react'
+import FindLocalsSplash from '../components/FindLocalsSplash'
+
+// One-shot guard for the Find Locals onboarding splash. Lives at module scope
+// so it survives in-app navigation (Home → FindHelp → back to Home doesn't
+// re-show the splash within the same session), but gets reset on every browser
+// refresh or dev-server restart — which is exactly the demo behavior we want.
+let splashSeenThisSession = false
 
 function LangButton() {
   const { toggleLang, t } = useLang()
@@ -129,8 +136,26 @@ const SUB_TABS_KEYS = ['forYou', 'video', 'live', 'series', 'fashion']
 export default function Home() {
   const navigate = useNavigate()
   const { lang, t } = useLang()
-  const [topTab, setTopTab] = useState('explore')
+  const [topTab, setTopTab] = useState('nearby')
   const [subTab, setSubTab] = useState('forYou')
+  // First-time taps on Find Locals show a full-screen onboarding splash
+  // highlighting the product. Closing the splash (X or CTA) is what kicks
+  // off navigation. Subsequent taps skip straight to /find-help.
+  const [splashOpen, setSplashOpen] = useState(false)
+
+  const handleFindLocals = () => {
+    if (!splashSeenThisSession) {
+      setSplashOpen(true)
+      return
+    }
+    navigate('/find-help')
+  }
+
+  const handleCloseSplash = () => {
+    splashSeenThisSession = true
+    setSplashOpen(false)
+    navigate('/find-help')
+  }
 
   return (
     <>
@@ -210,7 +235,7 @@ export default function Home() {
             </p>
           </div>
           <button
-            onClick={() => navigate('/find-help')}
+            onClick={handleFindLocals}
             className="shrink-0 flex items-center gap-1 bg-white text-xhs-red px-3 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-transform"
           >
             <Compass size={14} />
@@ -238,6 +263,9 @@ export default function Home() {
         <NavItem icon={<MessageCircle size={22} />} label={t('home.nav.messages')} />
         <NavItem icon={<User size={22} />} label={t('home.nav.me')} />
       </div>
+
+      {/* First-time onboarding splash for Find Locals */}
+      {splashOpen && <FindLocalsSplash onClose={handleCloseSplash} />}
     </>
   )
 }
