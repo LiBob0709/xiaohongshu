@@ -125,6 +125,16 @@ export const translations = {
       title: 'Choose your language',
       subtitle: 'UI, chat, and guides will update instantly',
     },
+    messages: {
+      title: 'Messages',
+      emptyTitle: 'No conversations yet',
+      emptyDesc: 'Start by finding a local — your group chats will show up here.',
+      noMessagesYet: 'No messages yet',
+      now: 'now',
+      minutesAgo: '{n}m',
+      hoursAgo: '{n}h',
+      daysAgo: '{n}d',
+    },
   },
 
   zh: {
@@ -247,6 +257,16 @@ export const translations = {
     languagePicker: {
       title: '选择语言',
       subtitle: '界面、聊天和攻略都会立即切换',
+    },
+    messages: {
+      title: '消息',
+      emptyTitle: '还没有任何会话',
+      emptyDesc: '先去找一位本地人 —— 你的群聊会出现在这里。',
+      noMessagesYet: '暂无消息',
+      now: '刚刚',
+      minutesAgo: '{n}分钟前',
+      hoursAgo: '{n}小时前',
+      daysAgo: '{n}天前',
     },
   },
 
@@ -371,6 +391,16 @@ export const translations = {
       title: 'Choisissez votre langue',
       subtitle: "L'interface, le chat et les guides s'actualiseront immédiatement",
     },
+    messages: {
+      title: 'Messages',
+      emptyTitle: "Aucune conversation pour l'instant",
+      emptyDesc: "Commencez par trouver un local — vos chats apparaîtront ici.",
+      noMessagesYet: 'Aucun message',
+      now: "à l'instant",
+      minutesAgo: 'il y a {n} min',
+      hoursAgo: 'il y a {n} h',
+      daysAgo: 'il y a {n} j',
+    },
   },
 
   es: {
@@ -493,6 +523,16 @@ export const translations = {
     languagePicker: {
       title: 'Elige tu idioma',
       subtitle: 'La interfaz, el chat y las guías se actualizarán al instante',
+    },
+    messages: {
+      title: 'Mensajes',
+      emptyTitle: 'Aún no hay conversaciones',
+      emptyDesc: 'Empieza por buscar un local — tus chats aparecerán aquí.',
+      noMessagesYet: 'Sin mensajes',
+      now: 'ahora',
+      minutesAgo: 'hace {n} min',
+      hoursAgo: 'hace {n} h',
+      daysAgo: 'hace {n} d',
     },
   },
 
@@ -617,6 +657,16 @@ export const translations = {
       title: '言語を選択',
       subtitle: 'UI、チャット、ガイドが即座に切り替わります',
     },
+    messages: {
+      title: 'メッセージ',
+      emptyTitle: 'まだ会話がありません',
+      emptyDesc: 'まずは現地の人を探してみましょう — グループチャットがここに表示されます。',
+      noMessagesYet: 'メッセージなし',
+      now: 'たった今',
+      minutesAgo: '{n}分前',
+      hoursAgo: '{n}時間前',
+      daysAgo: '{n}日前',
+    },
   },
 
   ko: {
@@ -739,6 +789,16 @@ export const translations = {
     languagePicker: {
       title: '언어 선택',
       subtitle: 'UI, 채팅, 가이드가 즉시 전환됩니다',
+    },
+    messages: {
+      title: '메시지',
+      emptyTitle: '아직 대화가 없어요',
+      emptyDesc: '먼저 현지인을 찾아보세요 — 그룹 채팅이 여기 표시됩니다.',
+      noMessagesYet: '메시지 없음',
+      now: '방금',
+      minutesAgo: '{n}분 전',
+      hoursAgo: '{n}시간 전',
+      daysAgo: '{n}일 전',
     },
   },
 }

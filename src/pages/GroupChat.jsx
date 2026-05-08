@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LanguageContext'
+import { useChatHistory } from '../context/ChatHistoryContext'
 import { getLocalResponse, translateText, LOCAL_PERSONAS } from '../api/mimo'
 import { pickChatNote } from '../data/mockChatNotes'
 import Header from '../components/Header'
@@ -12,7 +13,37 @@ export default function GroupChat() {
   const navigate = useNavigate()
   const location = useLocation()
   const { lang, t } = useLang()
-  const [messages, setMessages] = useState([])
+  const { startSession, updateSession, getSession } = useChatHistory()
+
+  // If we were navigated here from /messages with a `resumeSessionId`, hydrate
+  // from the stored session record. Otherwise, fall back to the new-chat seed
+  // that came from FindHelp → Matching.
+  const resumeSessionId = location.state?.resumeSessionId
+  const resumed = resumeSessionId ? getSession(resumeSessionId) : null
+
+  const category = resumed?.category || location.state?.category || 'food'
+  const categories = useMemo(
+    () => resumed?.categories || location.state?.categories || [category],
+    [resumed, location.state?.categories, category],
+  )
+  const description = resumed?.description || location.state?.description || ''
+  const nationality = resumed?.nationality || location.state?.nationality || 'UK'
+
+  // Lazy-init the messages array from the saved session if resuming; otherwise
+  // seed with the system "matched" greeting. Doing this in useState (instead
+  // of a setMessages inside an effect) avoids cascading renders.
+  const [messages, setMessages] = useState(() =>
+    resumed
+      ? resumed.messages
+      : [
+          {
+            id: 'system-1',
+            type: 'system',
+            text: t('chat.systemMatch'),
+            timestamp: new Date(),
+          },
+        ],
+  )
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [typingUsers, setTypingUsers] = useState([])
@@ -33,15 +64,9 @@ export default function GroupChat() {
     })
   const bottomRef = useRef(null)
 
-  const category = location.state?.category || 'food'
-  // Stabilized to keep the sendMessage useCallback's deps from changing every
-  // render (the `||` fallback creates a new array each time otherwise).
-  const categories = useMemo(
-    () => location.state?.categories || [category],
-    [location.state?.categories, category],
-  )
-  const description = location.state?.description || ''
-  const nationality = location.state?.nationality || 'UK'
+  // Tracks which session id this chat instance is persisting into. Set inside
+  // the mount effect below, so we never call startSession during render.
+  const sessionIdRef = useRef(null)
 
   // Per-language welcome-message template. The user's auto-sent intro to the
   // group is composed in their selected UI language; the locals see a Chinese
@@ -207,18 +232,32 @@ export default function GroupChat() {
   useEffect(() => {
     if (welcomeFiredRef.current) return
     welcomeFiredRef.current = true
-    setMessages([
-      {
-        id: 'system-1',
-        type: 'system',
-        text: t('chat.systemMatch'),
-        timestamp: new Date(),
-      },
-    ])
+
+    // Resume path: messages array was already seeded by useState's lazy init.
+    // Just record which session id this instance writes back into.
+    if (resumed) {
+      sessionIdRef.current = resumeSessionId
+      return
+    }
+
+    // New chat: register a session in the history store and queue the
+    // welcome auto-send. The system greeting is already in messages from the
+    // useState lazy init. Subsequent messages-array changes are mirrored into
+    // the session by the persistence effect below.
+    sessionIdRef.current = startSession({ category, categories, description, nationality })
     const welcome = buildWelcomeMessage()
     setTimeout(() => sendMessageRef.current?.(welcome), 600)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Persist messages into the session store on every change so the Messages
+  // page list reflects the latest preview / timestamp without any extra step
+  // from the user.
+  useEffect(() => {
+    if (!sessionIdRef.current) return
+    if (!messages.length) return
+    updateSession(sessionIdRef.current, { messages })
+  }, [messages, updateSession])
 
   const handleEndChat = () => {
     navigate('/guide', {

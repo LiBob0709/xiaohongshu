@@ -5,6 +5,7 @@ import Matching from './pages/Matching'
 import GroupChat from './pages/GroupChat'
 import Guide from './pages/Guide'
 import Publish from './pages/Publish'
+import Messages from './pages/Messages'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/chat" element={<GroupChat />} />
         <Route path="/guide" element={<Guide />} />
         <Route path="/publish" element={<Publish />} />
+        <Route path="/messages" element={<Messages />} />
       </Routes>
     </div>
   )

@@ -283,7 +283,11 @@ export default function Home() {
         >
           <Plus size={20} strokeWidth={3} />
         </button>
-        <NavItem icon={<MessageCircle size={22} />} label={t('home.nav.messages')} />
+        <NavItem
+          icon={<MessageCircle size={22} />}
+          label={t('home.nav.messages')}
+          onClick={() => navigate('/messages')}
+        />
         <NavItem icon={<User size={22} />} label={t('home.nav.me')} />
       </div>
 
@@ -337,9 +341,20 @@ function PostedNoteCard({ posted, onOpen }) {
   )
 }
 
-function NavItem({ icon, label, active }) {
+function NavItem({ icon, label, active, onClick }) {
+  const className = `flex flex-col items-center gap-0.5 ${
+    active ? 'text-xhs-text' : 'text-xhs-text-secondary'
+  } ${onClick ? 'active:scale-95 transition-transform' : ''}`
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={className}>
+        {icon}
+        <span className="text-[10px]">{label}</span>
+      </button>
+    )
+  }
   return (
-    <div className={`flex flex-col items-center gap-0.5 ${active ? 'text-xhs-text' : 'text-xhs-text-secondary'}`}>
+    <div className={className}>
       {icon}
       <span className="text-[10px]">{label}</span>
     </div>
